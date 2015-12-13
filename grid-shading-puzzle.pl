@@ -1,62 +1,61 @@
 #!/usr/bin/perl -w
 use strict;
-use utf8;
 binmode STDOUT, ':utf8';
 
-my $count = 0;
+my $count = -50;
 
 my @rowdata = (
-[7,3,1,1,7],
-[1,1,2,2,1,1],
-[1,3,1,3,1,1,3,1],
-[1,3,1,1,6,1,3,1],
-[1,3,1,5,2,1,3,1],
-[1,1,2,1,1],
-[7,1,1,1,1,1,7],
-[3,3],
-[1,2,3,1,1,3,1,1,2],
-[1,1,3,2,1,1],
-[4,1,4,2,1,2],
-[1,1,1,1,1,4,1,3],
-[2,1,1,1,2,5],
-[3,2,2,6,3,1],
-[1,9,1,1,2,1],
-[2,1,2,2,3,1],
-[3,1,1,1,1,5,1],
-[1,2,2,5],
-[7,1,2,1,1,1,3],
-[1,1,2,1,2,2,1],
-[1,3,1,4,5,1],
-[1,3,1,3,10,2],
-[1,3,1,1,6,6],
-[1,1,2,1,1,2],
-[7,2,1,2,5],
+  [7,3,1,1,7],
+  [1,1,2,2,1,1],
+  [1,3,1,3,1,1,3,1],
+  [1,3,1,1,6,1,3,1],
+  [1,3,1,5,2,1,3,1],
+  [1,1,2,1,1],
+  [7,1,1,1,1,1,7],
+  [3,3],
+  [1,2,3,1,1,3,1,1,2],
+  [1,1,3,2,1,1],
+  [4,1,4,2,1,2],
+  [1,1,1,1,1,4,1,3],
+  [2,1,1,1,2,5],
+  [3,2,2,6,3,1],
+  [1,9,1,1,2,1],
+  [2,1,2,2,3,1],
+  [3,1,1,1,1,5,1],
+  [1,2,2,5],
+  [7,1,2,1,1,1,3],
+  [1,1,2,1,2,2,1],
+  [1,3,1,4,5,1],
+  [1,3,1,3,10,2],
+  [1,3,1,1,6,6],
+  [1,1,2,1,1,2],
+  [7,2,1,2,5],
 
-[7,2,1,1,7],
-[1,1,2,2,1,1],
-[1,3,1,3,1,3,1,3,1],
-[1,3,1,1,5,1,3,1],
-[1,3,1,1,4,1,3,1],
-[1,1,1,2,1,1],
-[7,1,1,1,1,1,7],
-[1,1,3],
-[2,1,2,1,8,2,1],
-[2,2,1,2,1,1,1,2],
-[1,7,3,2,1],
-[1,2,3,1,1,1,1,1],
-[4,1,1,2,6],
-[3,3,1,1,1,3,1],
-[1,2,5,2,2],
-[2,2,1,1,1,1,1,2,1],
-[1,3,3,2,1,8,1],
-[6,2,1],
-[7,1,4,1,1,3],
-[1,1,1,1,4],
-[1,3,1,3,7,1],
-[1,3,1,1,1,2,1,1,4],
-[1,3,1,4,3,3],
-[1,1,2,2,2,6,1],
-[7,1,3,2,1,1]
+  [7,2,1,1,7],
+  [1,1,2,2,1,1],
+  [1,3,1,3,1,3,1,3,1],
+  [1,3,1,1,5,1,3,1],
+  [1,3,1,1,4,1,3,1],
+  [1,1,1,2,1,1],
+  [7,1,1,1,1,1,7],
+  [1,1,3],
+  [2,1,2,1,8,2,1],
+  [2,2,1,2,1,1,1,2],
+  [1,7,3,2,1],
+  [1,2,3,1,1,1,1,1],
+  [4,1,1,2,6],
+  [3,3,1,1,1,3,1],
+  [1,2,5,2,2],
+  [2,2,1,1,1,1,1,2,1],
+  [1,3,3,2,1,8,1],
+  [6,2,1],
+  [7,1,4,1,1,3],
+  [1,1,1,1,4],
+  [1,3,1,3,7,1],
+  [1,3,1,1,1,2,1,1,4],
+  [1,3,1,4,3,3],
+  [1,1,2,2,2,6,1],
+  [7,1,3,2,1,1]
 );
 
 my @known;
@@ -83,13 +82,28 @@ print "$count\n";
 
 # Iterative Cull
 my $lastcount = 0;
-while (1) {
-  #first cull solutions which do not fit known black squares
-  for (my $row=0;$row<50;$row++) {
+while ($count != $lastcount) {
+  $lastcount = $count;
+
+  # determine squares which have only one solution based on row-by-row analysis
+  for my $row (0 .. 49) {
+    next if ((scalar @{$solutionrows[$row]})==0);
+    my @sum = (0)x25;
+    for my $solution (0 .. $#{$solutionrows[$row]}) {
+      $sum[$_] += $solutionrows[$row][$solution][$_] for (0 .. 24);
+    }
+    for (0 .. 24) {
+      my $k=($row<25)?(\$known[$row][$_]):(\$known[$_][$row-25]);
+      $$k=$solutionrows[$row][0][$_] if (($sum[$_]==0) or ($sum[$_]==scalar @{$solutionrows[$row]}));
+    }
+  }
+
+  # cull solutions which do not fit known black squares
+  for my $row (0 .. 49) {
     for (my $solution=0; $solution < scalar @{$solutionrows[$row]}; $solution++) {
-      for (my $i=0; $i < 25; $i++) {
-        my $k=($row<25)?(\$known[$row][$i]):(\$known[$i][$row-25]);
-        if (defined($$k) and $$k != $solutionrows[$row][$solution][$i]) {
+      for (0 .. 24) {
+        my $k=($row<25)?(\$known[$row][$_]):(\$known[$_][$row-25]);
+        if (defined($$k) and $$k != $solutionrows[$row][$solution][$_]) {
           splice(@{$solutionrows[$row]}, $solution, 1);
           $solution--; #move index back one after deleting element
           $count--; #update approx solution space count
@@ -98,28 +112,11 @@ while (1) {
       }
     }
   }
-
-  exit if ($lastcount == $count); # no more solutions culled since last pass
-  $lastcount = $count;
-
-  #then determine squares which have only one solution based on row-by-row analysis
-  for (my $row=0;$row<50;$row++) {
-    next if ((scalar @{$solutionrows[$row]})==0);
-    my @sum = (0)x25;
-    for (my $solution=0; $solution < scalar @{$solutionrows[$row]}; $solution++) {
-      $sum[$_] += $solutionrows[$row][$solution][$_] for (0 .. 24);
-    }
-    for (my $i=0; $i < 25; $i++) {
-      my $k=($row<25)?(\$known[$row][$i]):(\$known[$i][$row-25]);
-      $$k=$solutionrows[$row][0][$i] if (($sum[$i]==0) or ($sum[$i]==scalar @{$solutionrows[$row]}));
-    }
-  }
   
   print "$count\n";
   print join('', map{defined($_)?(($_==1)?"\x{2588}"x2:'  '):"\x{2591}"x2 } @{$_})."\n" for @known;
 
-  #repeat this process until we've culled all we can
-}
+} #repeat this process until we've culled all we can
 
 #see how many are left... then decide how to:
 #traverse all possible remaining combinations recursively, elliminating those not compatible with other solutions
