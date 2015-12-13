@@ -67,6 +67,7 @@ $known[21][$_] = 1 for (3,4,9,10,15,20,21);
 
 my @solutionrows;
 
+# generate possible solution space, row by row, column by column
 foreach my $row (@rowdata) {
   my $sum;
   $sum += $_ for @$row;                          # sum of black squares
